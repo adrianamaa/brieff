@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-canvas: #f4f1ea;
+  --color-surface: #fbf8f1;
+  --color-ink: #18121f;
+  /* secondary/tertiary greys — both verified >= WCAG AA on white (scripts/contrast-check.mjs) */
+  --color-muted: #5f5a55;
+  --color-faint: #6f6962;
+  --color-line: #e5dfd2;
+  --color-line-soft: #efeae1;
+  --color-accent: #7c3aed;
+  --color-accent-ink: #6d28d9;
+  --color-accent-soft: #f2ecfd;
+  --color-positive: #15803d;
+  --color-positive-soft: #ecfdf3;
+  --color-warn: #b45309;
+  --color-warn-soft: #fef3e2;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --radius-card: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* subtle scrollbar so dense panels feel refined, not noisy */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
 }

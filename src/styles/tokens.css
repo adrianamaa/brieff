@@ -1,0 +1,63 @@
+/* ============================================================
+   Brieff — design tokens (source of truth)
+   Brand: "Ink + Spark" — warm-editorial minimalism + hand annotation
+   ============================================================ */
+:root {
+  /* ---- surfaces: warm linen family ---- */
+  --linen:        #F4F1EA;  /* page canvas */
+  --surface:      #FBF9F5;  /* cards / panels */
+  --paper:        #FFFFFF;  /* elevated paper */
+
+  /* ---- ink & neutrals (all warm) ---- */
+  --ink:          #2A2521;  /* near-black text */
+  --fog:          #878075;  /* muted/secondary text */
+  --stone:        #C7C1B7;  /* borders / dividers */
+  --stone-soft:   #E4E0D8;  /* hairlines / soft borders */
+
+  /* ---- brand accent: emerald (the one vibrant contrasting accent) ---- */
+  --emerald:      #08976A;
+  --emerald-ink:  #067456;  /* darker — hovers / text-on-light */
+  --emerald-tint: #DCF0E8;  /* soft fill (tags, chips) */
+  --emerald-wash: #CFEEDF;  /* highlighter wash */
+
+  /* ---- decorative warmth: artwork & annotation ONLY, never functional UI ---- */
+  --ember:        #FF6A2B;
+  --amber:        #FFB020;
+
+  /* ---- type families (Adobe Fonts kit vpw1kox) ---- */
+  --font-display: "halyard-display", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-text:    "halyard-text", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* ---- type scale (display-driven editorial) ---- */
+  --fs-display: clamp(44px, 6vw, 72px);
+  --fs-h1:      clamp(34px, 4.4vw, 52px);
+  --fs-h2:      30px;
+  --fs-h3:      21px;
+  --fs-lede:    18px;
+  --fs-body:    16px;
+  --fs-small:   13px;
+  --fs-kicker:  12px;
+
+  --lh-tight: 1.05;
+  --lh-snug:  1.2;
+  --lh-body:  1.55;
+  --tracking-kicker: 0.14em;
+  --tracking-tight:  -0.02em;
+
+  /* ---- spacing ---- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+  --space-9: 96px; --space-10: 128px;
+
+  /* ---- radii ---- */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
+
+  /* ---- shadows (warm-tinted) ---- */
+  --shadow-sm: 0 1px 2px rgba(42,37,33,.06);
+  --shadow-md: 0 8px 24px -12px rgba(42,37,33,.18);
+  --shadow-lg: 0 24px 56px -24px rgba(42,37,33,.30);
+
+  /* ---- motion ---- */
+  --ease-decisive: cubic-bezier(.55,0,.2,1);
+  --dur-sweep: 2.8s;
+}
