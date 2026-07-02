@@ -166,6 +166,9 @@ export async function POST(req: Request) {
   if (!account || !notes.trim()) {
     return NextResponse.json({ fallback: true, reason: "missing_input" }, { status: 400 });
   }
+  // Bound per-request cost — real call notes are short; the cap is generous.
+  const MAX_NOTES = 8000;
+  if (notes.length > MAX_NOTES) notes = notes.slice(0, MAX_NOTES);
 
   try {
     const parsed = groqKey
