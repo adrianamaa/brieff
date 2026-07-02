@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://brieff-alpha.vercel.app"),
   title: "Brieff — AI sales copilot",
   description: "Walk into calls prepared. Leave with the follow-up already done.",
   icons: {
