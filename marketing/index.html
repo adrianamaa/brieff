@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brieff — walk in ready</title>
+<link rel="stylesheet" href="https://use.typekit.net/vpw1kox.css">
+<link rel="stylesheet" href="/src/styles/tokens.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--linen);color:var(--ink);font-family:var(--font-text);
+    -webkit-font-smoothing:antialiased;line-height:var(--lh-body)}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 32px}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- compare banner ---------- */
+  .compare{background:var(--ink);color:var(--surface);font-size:var(--fs-small);
+    text-align:center;padding:9px 16px;letter-spacing:.01em}
+  .compare b{color:var(--amber)}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb, var(--linen) 86%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--stone-soft)}
+  nav .row{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--font-display);
+    font-weight:600;font-size:20px;letter-spacing:-.01em}
+  .logo .mark{width:22px;height:22px}
+  .navlinks{display:flex;gap:30px;font-size:14.5px;color:var(--fog)}
+  .navlinks a:hover{color:var(--ink)}
+  .navcta{display:flex;align-items:center;gap:18px}
+
+  /* ---------- buttons ---------- */
+  .btn{font-family:var(--font-text);font-weight:600;font-size:15px;border-radius:var(--radius-sm);
+    padding:11px 18px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:none;
+    transition:transform .15s var(--ease-decisive), background .15s}
+  .btn-primary{background:var(--emerald);color:#fff}
+  .btn-primary:hover{background:var(--emerald-ink);transform:translateY(-1px)}
+  .btn-ghost{color:var(--ink);background:transparent;font-weight:600;font-size:15px;
+    border-bottom:2px solid var(--emerald);border-radius:0;padding:2px 1px}
+  .btn-sm{padding:9px 15px;font-size:14px}
+
+  /* ---------- hero ---------- */
+  .hero{padding:var(--space-9) 0 var(--space-8);position:relative}
+  .hero .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:60px;align-items:center}
+  .kicker{font-weight:600;font-size:var(--fs-kicker);letter-spacing:var(--tracking-kicker);
+    text-transform:uppercase;color:var(--emerald);margin-bottom:18px}
+  h1.head{font-family:var(--font-display);font-weight:500;font-size:var(--fs-h1);
+    line-height:var(--lh-tight);letter-spacing:var(--tracking-tight)}
+  .lede{font-size:var(--fs-lede);color:var(--fog);margin:22px 0 30px;max-width:520px}
+  .herocta{display:flex;align-items:center;gap:22px}
+  .trust{margin-top:34px;font-size:var(--fs-small);color:var(--fog);display:flex;align-items:center;gap:14px}
+  .trust .dots{display:flex;gap:-6px}
+  .trust .av{width:24px;height:24px;border-radius:50%;border:2px solid var(--linen);
+    background:var(--stone);margin-left:-7px}
+  .trust .av:first-child{margin-left:0}
+
+  /* variant ribbon */
+  .ribbon{position:absolute;top:26px;right:0;background:var(--ink);color:var(--surface);
+    font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    padding:6px 14px;border-radius:20px}
+  .hero.alt{border-top:1px dashed var(--stone);background:
+    linear-gradient(var(--surface), var(--linen))}
+
+  /* ===== highlighter-pen-above-line on the headline ===== */
+  .hl{position:relative;display:inline-block;padding:0 3px}
+  .hl .t{position:relative;z-index:2}
+  .hl .wash{position:absolute;z-index:1;left:-5px;right:-7px;top:9%;bottom:5%;background:var(--emerald-wash);
+    transform:rotate(-1.2deg);border-radius:3px 6px 4px 7px;clip-path:inset(0 100% 0 0);
+    animation:wipe var(--dur-sweep) var(--ease-decisive) infinite}
+  @keyframes wipe{0%,14%{clip-path:inset(0 100% 0 0);opacity:1}33%{clip-path:inset(0 0 0 0)}
+    86%{clip-path:inset(0 0 0 0);opacity:1}91%{opacity:0;clip-path:inset(0 0 0 0)}100%{opacity:0;clip-path:inset(0 100% 0 0)}}
+  .hl .pen{position:absolute;z-index:3;left:0;bottom:82%;
+    animation:penAbove var(--dur-sweep) var(--ease-decisive) infinite}
+  .hl .pen svg{display:block;transform:translateX(-16px)}
+  @keyframes penAbove{
+    0%{left:-2%;opacity:0;transform:translateY(3px)}9%{opacity:0}12%{opacity:1;left:-2%;transform:translateY(0)}
+    34%{left:100%;transform:translateY(0)}40%{left:103%}46%{left:100%;opacity:1;transform:translateY(0)}
+    56%{opacity:0;transform:translateY(-15px)}100%{opacity:0;left:100%;transform:translateY(-15px)}}
+
+  /* supporting annotation: squiggle */
+  .squig{position:relative;white-space:nowrap}
+  .squig svg{position:absolute;left:0;right:0;bottom:-7px;width:100%;height:9px;overflow:visible}
+  .squig path{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 3.4s infinite}
+  @keyframes draw{0%{stroke-dashoffset:1}40%,86%{stroke-dashoffset:0}93%{stroke-dashoffset:0;opacity:1}95%{opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+
+  /* ===== MOCK A — clean app window ===== */
+  .appwin{background:var(--paper);border:1px solid var(--stone-soft);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-lg);overflow:hidden}
+  .appwin .bar{display:flex;align-items:center;gap:7px;padding:13px 16px;border-bottom:1px solid var(--stone-soft)}
+  .appwin .bar i{width:11px;height:11px;border-radius:50%;background:var(--stone-soft)}
+  .appwin .bar .ttl{margin-left:10px;font-size:12px;color:var(--fog)}
+  .appwin .body{padding:24px 26px 28px}
+  .ek{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--emerald)}
+  .appwin h3{font-family:var(--font-display);font-weight:600;font-size:22px;margin:5px 0 18px}
+  .three{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:20px}
+  .three li{display:flex;gap:11px;align-items:flex-start;font-size:15px}
+  .three .ck{width:19px;height:19px;border-radius:6px;background:var(--emerald);color:#fff;
+    font-size:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin-top:1px}
+  .attend{display:flex;gap:8px;margin-bottom:18px}
+  .chip{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--stone-soft);
+    border-radius:20px;padding:5px 11px 5px 5px;font-size:12.5px}
+  .chip .a{width:22px;height:22px;border-radius:50%;background:var(--emerald-tint);color:var(--emerald-ink);
+    font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .readline{display:inline-flex;align-items:center;gap:8px;background:var(--emerald-tint);
+    color:var(--emerald-ink);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:20px}
+  .readline::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--emerald)}
+
+  /* ===== MOCK B — paper brief ===== */
+  .paperwrap{position:relative;max-width:400px;margin:0 auto;transform:rotate(-2deg)}
+  .paper{background:
+      repeating-linear-gradient(transparent, transparent 31px, var(--emerald-tint) 31px, var(--emerald-tint) 32px),
+      var(--paper);
+    border:1px solid var(--stone-soft);border-radius:5px;padding:30px 30px 38px;
+    box-shadow:var(--shadow-lg);position:relative}
+  .paper::before{content:"";position:absolute;left:46px;top:0;bottom:0;width:1.5px;background:rgba(255,106,43,.35)}
+  .paper .tab{position:absolute;top:-17px;right:34px;background:var(--amber);color:#5a3a00;
+    font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 15px 9px;border-radius:6px 6px 0 0}
+  .paper .clip{position:absolute;top:-15px;left:40px;width:18px;height:48px;border:3px solid var(--stone);
+    border-bottom:none;border-radius:9px 9px 0 0;z-index:3}
+  .paper .pk{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--emerald);margin-left:24px}
+  .paper h3{font-family:var(--font-display);font-weight:600;font-size:24px;margin:4px 0 22px 24px;line-height:1.1}
+  .paper .pr{display:flex;gap:11px;align-items:flex-start;margin:0 0 16px 24px;font-size:16px;font-family:var(--font-display);font-weight:500}
+  .paper .pr i{width:17px;height:17px;border:2px solid var(--emerald);border-radius:4px;flex:0 0 auto;margin-top:3px;position:relative}
+  .paper .pr.done i{background:var(--emerald)}
+  .paper .pr.done i::after{content:"✓";position:absolute;inset:-3px 0 0;color:#fff;font-size:12px;text-align:center}
+  .sticky{position:absolute;bottom:-26px;right:-22px;width:118px;background:var(--emerald-wash);
+    padding:14px 14px;transform:rotate(5deg);box-shadow:var(--shadow-md);
+    font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--emerald-ink);line-height:1.25}
+  .penmark{position:absolute;right:34px;top:104px;transform:rotate(-8deg)}
+
+  /* ---------- three jobs strip ---------- */
+  .jobs{padding:var(--space-8) 0;border-top:1px solid var(--stone-soft)}
+  .jobs .h{font-family:var(--font-display);font-weight:500;font-size:var(--fs-h2);
+    letter-spacing:var(--tracking-tight);margin-bottom:8px}
+  .jobs .sub{color:var(--fog);font-size:var(--fs-lede);margin-bottom:40px}
+  .jobrow{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .job{background:var(--surface);border:1px solid var(--stone-soft);border-radius:var(--radius-lg);padding:28px}
+  .job .n{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--emerald)}
+  .job h4{font-family:var(--font-display);font-weight:600;font-size:var(--fs-h3);margin:10px 0 8px}
+  .job p{font-size:14.5px;color:var(--fog)}
+
+  footer{padding:var(--space-7) 0;border-top:1px solid var(--stone-soft);color:var(--fog);font-size:var(--fs-small);text-align:center}
+
+  @media (max-width:860px){
+    .hero .grid,.jobrow{grid-template-columns:1fr;gap:36px}
+    .navlinks{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="compare">Two hero treatments below — <b>Option A (clean app window)</b> then <b>Option B (paper brief)</b>. Scroll, compare, tell me A or B.</div>
+
+<!-- NAV -->
+<nav><div class="wrap"><div class="row">
+  <div class="logo">
+    <svg class="mark" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="8.5" rx="2" fill="#2A2521"/><path d="M7.5 14.5 H16.5 V19 a2 2 0 0 1-2 2 H7.5 Z" fill="#2A2521"/></svg>
+    Brieff
+  </div>
+  <div class="navlinks"><a href="#">Product</a><a href="#">How it works</a><a href="#">Pricing</a><a href="#">Trust</a></div>
+  <div class="navcta"><a href="#" style="font-size:14.5px;color:var(--fog)">Sign in</a><button class="btn btn-primary btn-sm">Get early access</button></div>
+</div></div></nav>
+
+<!-- ===================== HERO — OPTION A ===================== -->
+<section class="hero">
+  <div class="ribbon">Option A · app window</div>
+  <div class="wrap"><div class="grid">
+    <div>
+      <div class="kicker">Meeting prep · recap · follow-up</div>
+      <h1 class="head">Walk into every call
+        <span class="hl"><span class="t">already&nbsp;ready</span><span class="wash"></span><span class="pen"><svg width="48" height="60" viewBox="0 0 60 74"><g transform="rotate(24 30 37)" fill="none" stroke="#08976A" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><rect x="18" y="8" width="22" height="42" rx="6.5"/><line x1="18.6" y1="16.5" x2="39.4" y2="16.5"/><rect x="24" y="22" width="10" height="20" rx="5"/><path d="M19.5 50 L38.5 50 L35 57 L23 57 Z"/><path d="M24.5 57 L33.5 57 L31 64.5 L27 66.5 Z" fill="#08976A"/></g></svg></span></span>
+        — and never drop the ball after.</h1>
+      <p class="lede">Brieff turns every sales call into sharp prep, an instant recap, and a follow-up that's already written — so you show up prepared and close the loop fast, without babysitting the AI.</p>
+      <div class="herocta">
+        <button class="btn btn-primary">Get early access</button>
+        <a href="#" class="btn-ghost">See how it works</a>
+      </div>
+      <div class="trust">
+        <div class="dots"><span class="av"></span><span class="av"></span><span class="av"></span></div>
+        Built with AEs running 25–40 live opps.
+      </div>
+    </div>
+
+    <!-- MOCK A: clean app window -->
+    <div class="appwin">
+      <div class="bar"><i></i><i></i><i></i><span class="ttl">Brieff — Northwind Logistics</span></div>
+      <div class="body">
+        <div class="ek">Pre-call brief</div>
+        <h3>Northwind Logistics</h3>
+        <ul class="three">
+          <li><span class="ck">✓</span> Renewal at risk — CFO opened a cost review last week.</li>
+          <li><span class="ck">✓</span> Maya (VP Ops) is your champion — pushing for multi-year.</li>
+          <li><span class="ck">✓</span> Lead with the Q3 uptime win; pre-empt the price objection.</li>
+        </ul>
+        <div class="attend">
+          <span class="chip"><span class="a">MA</span> Maya · champion</span>
+          <span class="chip"><span class="a">RK</span> Raj · CFO</span>
+        </div>
+        <span class="readline">Brieff read · 6 records</span>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ===================== HERO — OPTION B ===================== -->
+<section class="hero alt">
+  <div class="ribbon">Option B · paper brief</div>
+  <div class="wrap"><div class="grid">
+    <div>
+      <div class="kicker">Meeting prep · recap · follow-up</div>
+      <h1 class="head">Walk into every call
+        <span class="hl"><span class="t">already&nbsp;ready</span><span class="wash"></span><span class="pen"><svg width="48" height="60" viewBox="0 0 60 74"><g transform="rotate(24 30 37)" fill="none" stroke="#08976A" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><rect x="18" y="8" width="22" height="42" rx="6.5"/><line x1="18.6" y1="16.5" x2="39.4" y2="16.5"/><rect x="24" y="22" width="10" height="20" rx="5"/><path d="M19.5 50 L38.5 50 L35 57 L23 57 Z"/><path d="M24.5 57 L33.5 57 L31 64.5 L27 66.5 Z" fill="#08976A"/></g></svg></span></span>
+        — and never <span class="squig">drop the ball<svg viewBox="0 0 120 9" preserveAspectRatio="none"><path pathLength="1" d="M1 5 Q15 1 30 5 T60 5 T90 5 T119 5" fill="none" stroke="#FF6A2B" stroke-width="2.4" stroke-linecap="round"/></svg></span> after.</h1>
+      <p class="lede">Brieff turns every sales call into sharp prep, an instant recap, and a follow-up that's already written — so you show up prepared and close the loop fast, without babysitting the AI.</p>
+      <div class="herocta">
+        <button class="btn btn-primary">Get early access</button>
+        <a href="#" class="btn-ghost">See how it works</a>
+      </div>
+      <div class="trust">
+        <div class="dots"><span class="av"></span><span class="av"></span><span class="av"></span></div>
+        Built with AEs running 25–40 live opps.
+      </div>
+    </div>
+
+    <!-- MOCK B: paper brief -->
+    <div class="paperwrap">
+      <div class="paper">
+        <span class="clip"></span>
+        <span class="tab">Brief</span>
+        <div class="pk">Before the call</div>
+        <h3>Northwind Logistics</h3>
+        <div class="pr done"><i></i> Renewal at risk — CFO cost review</div>
+        <div class="pr done"><i></i> Maya (VP Ops) — your champion</div>
+        <div class="pr"><i></i> Lead with the Q3 uptime win</div>
+        <span class="penmark"><svg width="40" height="50" viewBox="0 0 60 74"><g transform="rotate(24 30 37)" fill="none" stroke="#08976A" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><rect x="18" y="8" width="22" height="42" rx="6.5"/><line x1="18.6" y1="16.5" x2="39.4" y2="16.5"/><rect x="24" y="22" width="10" height="20" rx="5"/><path d="M19.5 50 L38.5 50 L35 57 L23 57 Z"/><path d="M24.5 57 L33.5 57 L31 64.5 L27 66.5 Z" fill="#08976A"/></g></svg></span>
+      </div>
+      <div class="sticky">walk in ready ↗</div>
+    </div>
+  </div></div>
+</section>
+
+<!-- THREE JOBS -->
+<section class="jobs"><div class="wrap">
+  <div class="h">Three jobs. One workspace.</div>
+  <div class="sub">Narrow on purpose — the loop a rep actually runs, every single call.</div>
+  <div class="jobrow">
+    <div class="job"><div class="n">01 — Prep</div><h4>Walk in knowing</h4><p>One-tap brief: account summary, last touchpoints, risks, and the three things that matter — every claim cites the record.</p></div>
+    <div class="job"><div class="n">02 — Recap</div><h4>Capture once</h4><p>Drop your notes and Brieff drafts the summary, the next steps, and the CRM field updates — you review and approve.</p></div>
+    <div class="job"><div class="n">03 — Follow-up</div><h4>Close the loop</h4><p>The follow-up email is already written and the CRM update staged. Edit, approve, done — never auto-sent.</p></div>
+  </div>
+</div></section>
+
+<footer>Brieff — an AI sales workspace. · This page is a portfolio build; both heroes are live for comparison.</footer>
+
+</body>
+</html>

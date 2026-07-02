@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brieff — office-supply brief, premium minimal</title>
+<link rel="stylesheet" href="https://use.typekit.net/vpw1kox.css">
+<link rel="stylesheet" href="/src/styles/tokens.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--linen);color:var(--ink);font-family:var(--font-text);
+    -webkit-font-smoothing:antialiased;line-height:var(--lh-body);padding-bottom:120px}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 36px}
+  header.mast{padding:60px 0 30px}
+  .kick{font-weight:600;font-size:var(--fs-kicker);letter-spacing:var(--tracking-kicker);text-transform:uppercase;color:var(--emerald)}
+  h1{font-family:var(--font-display);font-weight:500;font-size:42px;line-height:1.05;letter-spacing:-.02em;margin:12px 0 12px}
+  .lede{font-size:var(--fs-lede);color:var(--fog);max-width:720px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:40px}
+  .cell{display:flex;flex-direction:column;gap:18px}
+  .stage{position:relative;background:var(--surface);border:1px solid var(--stone-soft);
+    border-radius:var(--radius-lg);height:400px;display:flex;align-items:center;justify-content:center;overflow:visible;padding:24px}
+  .stage::before{content:"";position:absolute;width:60%;height:54%;
+    background:radial-gradient(circle, rgba(255,106,43,.13), rgba(255,176,32,.07) 48%, transparent 72%);filter:blur(30px)}
+  .label .t{font-family:var(--font-display);font-size:16px;font-weight:600}
+  .label .t b{color:var(--emerald)}
+  .label p{font-size:12.5px;color:var(--fog);margin-top:3px}
+
+  /* ---------- refined office paper ---------- */
+  .paperwrap{position:relative;z-index:1;transform:rotate(-1.5deg)}
+  .paper{position:relative;z-index:1;width:240px;
+    background:linear-gradient(168deg,#FCFBF7,#F6F3EB);
+    border:1px solid rgba(42,37,33,.05);border-radius:5px;padding:24px 22px 22px;
+    box-shadow:0 0 0 1px rgba(42,37,33,.03), 0 28px 48px -24px rgba(42,37,33,.30), 0 9px 16px -9px rgba(42,37,33,.15)}
+  .paper .grain{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:.045;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  /* manila folder tab — tonal, thin, sits BEHIND the sheet */
+  .tab{position:absolute;top:-15px;right:26px;z-index:0;
+    background:#E7D8BB;border:1px solid rgba(42,37,33,.08);border-bottom:none;
+    color:#7a6440;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    padding:5px 14px 12px;border-radius:5px 5px 0 0}
+
+  /* delicate wire paperclip — single stone-toned stroke, gripping the top edge */
+  .clip{position:absolute;z-index:3;top:-13px;left:24px}
+
+  /* faint ruled lines + ember margin (premium-minimal) */
+  .ruled .sheetbg{position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:repeating-linear-gradient(transparent, transparent 24px, rgba(42,37,33,.045) 24px, rgba(42,37,33,.045) 25px)}
+  .ruled .margin{position:absolute;left:16px;top:14px;bottom:14px;width:1px;background:rgba(255,106,43,.2);z-index:0}
+  .ruled .body{padding-left:18px}
+
+  .eb{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--emerald);position:relative}
+  .ti{font-family:var(--font-display);font-weight:600;font-size:18px;margin:5px 0 3px;position:relative}
+  .meta{font-size:11.5px;color:var(--fog);margin-bottom:18px;position:relative}
+  .rows{display:flex;flex-direction:column;gap:13px;margin-bottom:18px;position:relative}
+  .r{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.4}
+  .r .d{width:5px;height:5px;border-radius:50%;background:var(--emerald);margin-top:6px;flex:0 0 auto}
+  .hlw{position:relative;display:inline-block}
+  .hlw::before{content:"";position:absolute;left:-2px;right:-3px;top:8%;bottom:10%;background:var(--emerald-wash);
+    transform:rotate(-.8deg);border-radius:3px;z-index:-1}
+  .readchip{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;color:var(--emerald-ink);position:relative}
+  .readchip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--emerald)}
+
+  .sticky{position:absolute;bottom:-22px;right:-20px;z-index:2;width:104px;background:var(--emerald-wash);
+    padding:11px 12px;transform:rotate(4deg);box-shadow:0 12px 22px -12px rgba(42,37,33,.3);
+    font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--emerald-ink);line-height:1.25}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="kick">Brieff · office brief — premium minimal</div>
+    <h1>The brief, kept — quieted.</h1>
+    <p class="lede">Same office-supply cues you liked — folder tab, paperclip, ruled paper, sticky — but every prop refined: a tonal manila tab instead of loud amber, a delicate wire clip, whisper-faint rules, warm stock + grain, the soft three-layer shadow. Office, but premium. Pick how many props feel right.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- A: tab + clip -->
+    <div class="cell">
+      <div class="stage">
+        <div class="paperwrap">
+          <div class="tab">Brief</div>
+          <svg class="clip" width="20" height="50" viewBox="0 0 20 50" fill="none"><path d="M10 6 C5.5 6 5.5 13 5.5 18 L5.5 38 C5.5 45 14.5 45 14.5 38 L14.5 14 C14.5 9.5 8.5 9.5 8.5 14 L8.5 36" stroke="#B4AB9C" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <div class="paper">
+            <span class="grain"></span>
+            <div class="eb">Pre-call brief</div>
+            <div class="ti">Northwind Logistics</div>
+            <div class="meta">Renewal · $84k ARR · Q3</div>
+            <div class="rows">
+              <div class="r"><span class="d"></span><div><span class="hlw">Renewal at risk</span> — CFO cost review.</div></div>
+              <div class="r"><span class="d"></span><div>Maya (VP Ops) — champion.</div></div>
+              <div class="r"><span class="d"></span><div>Lead with the uptime win.</div></div>
+            </div>
+            <span class="readchip">Brieff read · 6 records</span>
+          </div>
+        </div>
+      </div>
+      <div class="label"><div class="t">A · <b>Tab + clip</b> — my rec</div><p>The classic brief, every prop toned down. Manila tab, hairline wire clip. Premium restraint.</p></div>
+    </div>
+
+    <!-- B: tab + ruled + margin -->
+    <div class="cell">
+      <div class="stage">
+        <div class="paperwrap">
+          <div class="tab">Brief</div>
+          <div class="paper ruled">
+            <span class="grain"></span><span class="sheetbg"></span><span class="margin"></span>
+            <div class="body">
+              <div class="eb">Before the call</div>
+              <div class="ti">Northwind Logistics</div>
+              <div class="meta">Renewal · $84k ARR · Q3</div>
+              <div class="rows">
+                <div class="r"><span class="d"></span><div><span class="hlw">Renewal at risk</span> — CFO cost review.</div></div>
+                <div class="r"><span class="d"></span><div>Maya (VP Ops) — champion.</div></div>
+                <div class="r"><span class="d"></span><div>Lead with the uptime win.</div></div>
+              </div>
+              <span class="readchip">Brieff read · 6 records</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="label"><div class="t">B · <b>Tab + ruled paper</b></div><p>Folder tab + barely-there rules and a faint ember margin. Most "legal pad," still quiet.</p></div>
+    </div>
+
+    <!-- C: the full set, minimal -->
+    <div class="cell">
+      <div class="stage">
+        <div class="paperwrap">
+          <div class="tab">Brief</div>
+          <svg class="clip" width="20" height="50" viewBox="0 0 20 50" fill="none"><path d="M10 6 C5.5 6 5.5 13 5.5 18 L5.5 38 C5.5 45 14.5 45 14.5 38 L14.5 14 C14.5 9.5 8.5 9.5 8.5 14 L8.5 36" stroke="#B4AB9C" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <div class="paper">
+            <span class="grain"></span>
+            <div class="eb">Pre-call brief</div>
+            <div class="ti">Northwind Logistics</div>
+            <div class="meta">Renewal · $84k ARR · Q3</div>
+            <div class="rows">
+              <div class="r"><span class="d"></span><div><span class="hlw">Renewal at risk</span> — CFO cost review.</div></div>
+              <div class="r"><span class="d"></span><div>Maya (VP Ops) — champion.</div></div>
+              <div class="r"><span class="d"></span><div>Lead with the uptime win.</div></div>
+            </div>
+            <span class="readchip">Brieff read · 6 records</span>
+          </div>
+          <div class="sticky">walk in ready ↗</div>
+        </div>
+      </div>
+      <div class="label"><div class="t">C · <b>Full set</b></div><p>Tab + clip + sticky, all whisper-toned. Most props, still composed — the richest scene.</p></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
