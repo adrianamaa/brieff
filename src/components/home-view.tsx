@@ -5,7 +5,7 @@ import { Kicker, SectionHead } from "./recap-view";
 import { Check, Sparkle, ArrowRight, Phone, NotePencil } from "@phosphor-icons/react";
 import { todayAgenda, weekStats, northwind, type AgendaItem } from "@/lib/data";
 
-const nextUp = todayAgenda.find((m) => m.status === "upcoming")!;
+const nextUp = todayAgenda.find((m) => m.status === "upcoming");
 const hoursSaved = Math.round((weekStats.minutesSaved / 60) * 10) / 10;
 const pipelineValue = todayAgenda.reduce((sum, m) => sum + m.amount, 0);
 
@@ -68,6 +68,7 @@ export default function HomeView() {
 
       {/* top row: next up (wide) + this-week stat — side by side on large screens */}
       <div className="grid gap-5 xl:grid-cols-3 items-start">
+        {nextUp && (
         <div className="xl:col-span-2 rounded-xl border border-accent/25 bg-surface p-5 shadow-[0_1px_2px_rgba(24,18,31,0.04),0_8px_24px_-12px_rgba(124,58,237,0.18)]">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="min-w-0">
@@ -91,6 +92,7 @@ export default function HomeView() {
             <span className="inline-flex items-center gap-1.5 text-[13px] text-muted"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Focus: unblock ROI + security</span>
           </div>
         </div>
+        )}
 
         <div className={`${card} p-5`}>
           <Kicker>This week</Kicker>

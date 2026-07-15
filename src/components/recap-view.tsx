@@ -154,7 +154,7 @@ function SummaryItem({ point, onChange, onRemove }: { point: SummaryPoint; onCha
       <div className="min-w-0 flex-1">
         <p className="text-base text-ink leading-relaxed">{point.text}</p>
         <span className="mt-1 flex items-center gap-1.5 flex-wrap">
-          {point.tag && <span className="inline-flex items-center gap-1.5 text-[11px] text-faint"><span className={`h-1.5 w-1.5 rounded-full ${tagDot[point.tag]}`} /> {tagMeta[point.tag].label}</span>}
+          {point.tag && tagMeta[point.tag] && <span className="inline-flex items-center gap-1.5 text-[11px] text-faint"><span className={`h-1.5 w-1.5 rounded-full ${tagDot[point.tag]}`} /> {tagMeta[point.tag].label}</span>}
           <span className="inline-flex items-center gap-1 text-xs text-muted"><Icon.link className="h-3 w-3" /> {point.sourceLabel}</span>
         </span>
       </div>
@@ -222,14 +222,14 @@ function Confidence({ level }: { level: "high" | "medium" | "low" }) {
 
 type CrmStatus = "pending" | "approved" | "rejected";
 interface CrmState { id: string; field: string; from: string; to: string; confidence: "high" | "medium"; sourceLabel: string; status: CrmStatus }
-function CrmRow({ u, onApprove, onReject, onEdit }: { u: CrmState; onApprove: () => void; onReject: () => void; onEdit: (v: string) => void }) {
+function CrmRow({ u, onApprove, onReject, onReset, onEdit }: { u: CrmState; onApprove: () => void; onReject: () => void; onReset: () => void; onEdit: (v: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(u.to);
   if (u.status === "rejected") {
     return (
       <div className="flex items-center justify-between gap-4 py-2.5 opacity-60">
         <span className="text-[13px] text-muted"><span className="font-medium mr-2">{u.field}</span><span className="line-through">{u.to}</span> · rejected</span>
-        <button onClick={onApprove} className="text-xs font-medium text-accent hover:text-accent-ink">Undo</button>
+        <button onClick={onReset} className="text-xs font-medium text-accent hover:text-accent-ink">Undo</button>
       </div>
     );
   }
@@ -282,6 +282,7 @@ export default function RecapView({
   const [usingAltEmail, setUsingAltEmail] = useState(false);
   const [sent, setSent] = useState(initialSent);
   const [minutesSaved, setMinutesSaved] = useState(recap.minutesSaved);
+  const [fellBack, setFellBack] = useState(false);
 
   const approvedCount = crm.filter((u) => u.status === "approved").length;
   const pendingCount = crm.filter((u) => u.status === "pending").length;
@@ -295,27 +296,32 @@ export default function RecapView({
     setEmailSource(r.followUpEmail);
     setUsingAltEmail(false);
     setMinutesSaved(r.minutesSaved);
+    setSent(false); // a fresh recap means a fresh, unsent draft
   }
 
-  // Live Gemini over the pasted notes + account history. Falls back to the
-  // cached recap (already in state) if there's no key or the call errors.
+  // Live generation over the pasted notes + account history. Falls back to the
+  // cached recap (already in state) if there's no key or the call errors —
+  // and says so, so a fallback is never passed off as live output.
   async function generate() {
     setStatus("thinking");
+    let usedLive = false;
     try {
       const res = await fetch("/api/recap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes, account }),
+        body: JSON.stringify({ notes, accountId: account.id }),
       });
       if (res.ok) {
         const data = await res.json();
         if (data && !data.fallback && Array.isArray(data.summary)) {
           applyRecap(data as RecapResult);
+          usedLive = true;
         }
       }
     } catch {
       /* network error — keep the cached recap already in state */
     }
+    setFellBack(!usedLive);
     setStatus("done");
   }
   function regenerateEmail() {
@@ -352,6 +358,14 @@ export default function RecapView({
               </button>
             </div>
           </div>
+
+          {/* transparency: never pass the cached sample off as live output */}
+          {status === "done" && fellBack && (
+            <p className="mt-4 flex items-center gap-2 rounded-lg border border-line bg-canvas/60 px-3 py-2 text-xs text-muted animate-[fadeUp_.4s_ease]">
+              <Icon.spark className="h-3 w-3 shrink-0 text-faint" />
+              Live AI wasn&apos;t available for this run — the recap below isn&apos;t a fresh read of your notes.
+            </p>
+          )}
 
           {/* results distribute into 2 comfortable columns — wide enough that action items don't crush */}
           {status === "done" && (
@@ -392,6 +406,7 @@ export default function RecapView({
                     <CrmRow key={u.id} u={u}
                       onApprove={() => setCrm((prev) => prev.map((x) => (x.id === u.id ? { ...x, status: "approved" } : x)))}
                       onReject={() => setCrm((prev) => prev.map((x) => (x.id === u.id ? { ...x, status: "rejected" } : x)))}
+                      onReset={() => setCrm((prev) => prev.map((x) => (x.id === u.id ? { ...x, status: "pending" } : x)))}
                       onEdit={(v) => setCrm((prev) => prev.map((x) => (x.id === u.id ? { ...x, to: v } : x)))} />
                   ))}
                 </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Account } from "@/lib/data";
+import { northwind, type Account, type RecapResult, type SummaryPoint, type ActionItem, type CrmUpdate } from "@/lib/data";
 
 export const runtime = "nodejs";
 
@@ -14,6 +14,31 @@ export const runtime = "nodejs";
 
 const groqKey = process.env.GROQ_API_KEY;
 const geminiKey = process.env.GOOGLE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
+
+// The client sends an account *id*, never account data — the server owns the
+// records. Keeps the payload small and the prompt unspoofable.
+const ACCOUNTS: Record<string, Account> = { [northwind.id]: northwind };
+
+// Per-IP rate limit (in-memory, so per warm serverless instance — a cold start
+// resets it. Good enough to stop casual scripting against the free Groq quota;
+// swap for Upstash if the app ever gets real traffic.)
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60_000;
+const hits = new Map<string, number[]>();
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  if (hits.size > 500) {
+    for (const [k, v] of hits) if (v.every((t) => now - t >= RATE_WINDOW_MS)) hits.delete(k);
+  }
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT) {
+    hits.set(ip, recent);
+    return true;
+  }
+  recent.push(now);
+  hits.set(ip, recent);
+  return false;
+}
 
 const SYSTEM = `You are Brieff, an AI copilot for a B2B SaaS Account Executive. From the rep's raw post-call notes, cross-referenced with the account's CRM history, produce a concise, accurate post-call recap.
 
@@ -119,6 +144,9 @@ async function generateWithGroq(notes: string, account: Account): Promise<unknow
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqKey}` },
+    // fail fast into the cached fallback instead of hanging until the
+    // platform kills the function
+    signal: AbortSignal.timeout(15_000),
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -142,11 +170,92 @@ async function generateWithGemini(notes: string, account: Account): Promise<unkn
   const result = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
-    config: { systemInstruction: SYSTEM, responseMimeType: "application/json", responseSchema, temperature: 0.4 },
+    config: {
+      systemInstruction: SYSTEM,
+      responseMimeType: "application/json",
+      responseSchema,
+      temperature: 0.4,
+      // same fail-fast budget as the Groq path
+      abortSignal: AbortSignal.timeout(15_000),
+    },
   });
   const text = result.text;
   if (!text) throw new Error("Gemini: empty response");
   return JSON.parse(text);
+}
+
+// --- Response validation. Groq's json_object mode guarantees JSON, not our
+// shape — so every field the UI renders gets checked/coerced here, and the
+// route falls back rather than ship a recap the client could choke on.
+
+const TAGS = new Set(["risk", "competitor", "signal"]);
+const isStr = (v: unknown): v is string => typeof v === "string" && v.trim().length > 0;
+
+function sanitizeRecap(raw: unknown): RecapResult | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (!Array.isArray(r.summary) || !Array.isArray(r.actionItems) || !Array.isArray(r.crmUpdates)) return null;
+
+  const email = r.followUpEmail as Record<string, unknown> | null;
+  if (!email || typeof email !== "object" || !isStr(email.subject) || !isStr(email.body)) return null;
+
+  const summary: SummaryPoint[] = [];
+  for (const [i, item] of (r.summary as unknown[]).entries()) {
+    const s = item as Record<string, unknown>;
+    if (!s || typeof s !== "object" || !isStr(s.text)) continue;
+    summary.push({
+      // positional ids, never the model's — duplicate ids would make per-id
+      // edit/remove/approve act on multiple rows at once
+      id: `s${i + 1}`,
+      text: s.text,
+      sourceActivityId: isStr(s.sourceActivityId) ? s.sourceActivityId : "",
+      sourceLabel: isStr(s.sourceLabel) ? s.sourceLabel : "this call",
+      ...(isStr(s.tag) && TAGS.has(s.tag) ? { tag: s.tag as SummaryPoint["tag"] } : {}),
+    });
+  }
+  if (summary.length === 0) return null;
+
+  const actionItems: ActionItem[] = [];
+  for (const [i, item] of (r.actionItems as unknown[]).entries()) {
+    const a = item as Record<string, unknown>;
+    if (!a || typeof a !== "object" || !isStr(a.text)) continue;
+    actionItems.push({
+      id: `ai${i + 1}`,
+      text: a.text,
+      alt: isStr(a.alt) ? a.alt : a.text,
+      owner: isStr(a.owner) ? a.owner : "You",
+      due: isStr(a.due) ? a.due : "This week",
+    });
+  }
+
+  const crmUpdates: CrmUpdate[] = [];
+  for (const [i, item] of (r.crmUpdates as unknown[]).entries()) {
+    const u = item as Record<string, unknown>;
+    if (!u || typeof u !== "object" || !isStr(u.field) || !isStr(u.to)) continue;
+    crmUpdates.push({
+      id: `u${i + 1}`,
+      field: u.field,
+      from: isStr(u.from) ? u.from : "—",
+      to: u.to,
+      confidence: u.confidence === "high" ? "high" : "medium",
+      sourceLabel: isStr(u.sourceLabel) ? u.sourceLabel : "this call",
+    });
+  }
+
+  const rawMinutes = typeof r.minutesSaved === "number" ? Math.round(r.minutesSaved) : 12;
+  const minutesSaved = Math.min(60, Math.max(1, rawMinutes));
+
+  return {
+    summary,
+    actionItems,
+    crmUpdates,
+    followUpEmail: {
+      subject: email.subject,
+      body: email.body,
+      altBody: isStr(email.altBody) ? email.altBody : email.body,
+    },
+    minutesSaved,
+  };
 }
 
 export async function POST(req: Request) {
@@ -154,12 +263,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ fallback: true, reason: "no_key" });
   }
 
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (rateLimited(ip)) {
+    return NextResponse.json({ fallback: true, reason: "rate_limited" }, { status: 429 });
+  }
+
   let notes = "";
   let account: Account | undefined;
   try {
     const body = await req.json();
     notes = typeof body?.notes === "string" ? body.notes : "";
-    account = body?.account as Account | undefined;
+    account = typeof body?.accountId === "string" ? ACCOUNTS[body.accountId] : undefined;
   } catch {
     return NextResponse.json({ fallback: true, reason: "bad_request" }, { status: 400 });
   }
@@ -175,11 +289,11 @@ export async function POST(req: Request) {
       ? await generateWithGroq(notes, account)
       : await generateWithGemini(notes, account);
 
-    // minimal shape guard — if the model returned something off, fall back
-    if (!parsed || typeof parsed !== "object" || !Array.isArray((parsed as { summary?: unknown }).summary)) {
+    const recap = sanitizeRecap(parsed);
+    if (!recap) {
       return NextResponse.json({ fallback: true, reason: "bad_shape" });
     }
-    return NextResponse.json(parsed);
+    return NextResponse.json(recap);
   } catch (err) {
     console.error("[/api/recap] generation failed:", err);
     return NextResponse.json({ fallback: true, reason: "error" });

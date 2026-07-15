@@ -142,12 +142,12 @@ export default function PrepView({ account, prep }: { account: Account; prep: Pr
                 const done = doneActions.has(p.id);
                 return (
                   <li key={p.id}>
-                    <label className="flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 hover:bg-canvas transition-colors cursor-pointer">
-                      <button type="button" onClick={() => setDoneActions((s) => flip(s, p.id))} aria-label="Mark ready" className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent hover:border-accent"}`}>
+                    <button type="button" onClick={() => setDoneActions((s) => flip(s, p.id))} aria-pressed={done} className="w-full flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 text-left hover:bg-canvas transition-colors cursor-pointer">
+                      <span aria-hidden className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent"}`}>
                         <Icon.check className="h-3 w-3" />
-                      </button>
+                      </span>
                       <span className={`text-[15px] leading-snug ${done ? "text-faint line-through" : "text-ink"}`}>{p.text}</span>
-                    </label>
+                    </button>
                   </li>
                 );
               })}
@@ -160,12 +160,12 @@ export default function PrepView({ account, prep }: { account: Account; prep: Pr
                 const done = covered.has(t.id);
                 return (
                   <li key={t.id}>
-                    <label className="flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 hover:bg-canvas transition-colors cursor-pointer">
-                      <button type="button" onClick={() => setCovered((s) => flip(s, t.id))} aria-label="Mark covered" className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent hover:border-accent"}`}>
+                    <button type="button" onClick={() => setCovered((s) => flip(s, t.id))} aria-pressed={done} className="w-full flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 text-left hover:bg-canvas transition-colors cursor-pointer">
+                      <span aria-hidden className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent"}`}>
                         <Icon.check className="h-3 w-3" />
-                      </button>
+                      </span>
                       <span className={`text-[15px] leading-snug ${done ? "text-faint line-through" : "text-ink"}`}>{t.text}</span>
-                    </label>
+                    </button>
                   </li>
                 );
               })}
