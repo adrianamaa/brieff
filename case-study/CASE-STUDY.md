@@ -1,7 +1,8 @@
 # Brieff — an AI sales copilot you don't have to babysit
 
-**A meeting-prep and follow-up copilot for Account Executives, built live on mock CRM data.**
-Role: product design (strategy → IA → UI → brand → front-end build). Type: self-directed case study.
+**A meeting-prep and follow-up copilot for Account Executives — a working, deployed product with live AI, on seeded CRM data.**
+Role: product design (strategy → IA → UI → brand → front-end build). Type: self-directed, shipped live.
+**Try it:** [brieff-alpha.vercel.app](https://brieff-alpha.vercel.app)
 
 ![Brieff — post-call recap, fully generated](screens/v3-brieff/recap-full.png)
 
@@ -13,8 +14,8 @@ Sales reps lose 1–2 hours a day to call prep and CRM admin, and they distrust 
 or uncontrollable. **Brieff** is a copilot scoped to one job — *walk in prepared, close out the admin
 fast* — built around a single thesis: **review-and-approve, not chat**. Every claim cites its source
 record, every output is an editable draft, and nothing is ever sent or written without the rep's
-approval. I designed and built it as a working Next.js app, then took it through a full brand identity
-(naming, logo, color system, icons) end to end.
+approval. I designed and built it as a working Next.js app with live AI generation, shipped it to production,
+then took it through a full brand identity (naming, logo, color system, icons) end to end.
 
 ---
 
@@ -104,6 +105,27 @@ floating at the far edge). The resolution: **don't add width, add columns.** Das
 card grid; record pages distribute into multi-column flows at comfortable widths. "Fill vs. cap" was a
 false binary — the answer is *distribution*.
 
+### The review that caught the product lying
+After launch, a full code review of the live product turned up the most instructive bug in the
+project — not a crash, a **principle violation**. Brieff's #1 principle is *Transparent: every AI
+claim cites its source record.* But my server code, when the model *forgot* a citation, quietly
+stamped a default one ("this call") onto the claim — and when the model omitted the minutes-saved
+number, it substituted 12. The UI rendered that fabricated evidence with the same citation chip as
+the real thing. The code was polite exactly where the principle demanded honesty.
+
+The fix was a product decision, not a patch: **drop uncited claims, never decorate them.** A summary
+point or CRM suggestion without a real source is now removed before it reaches the screen, and the
+time-saved chip simply doesn't render when the model gave no number. The reasoning is a trust
+argument — *content can be incomplete; trust can't be partial.* One discovered fake citation poisons
+every real one, so a missing bullet costs less than a discovered lie.
+
+The same review gate also caught a build-breaking mistake introduced *during* the bug-fix pass itself
+(a package rename that missed its lockfile twin) — which is the whole argument for the gate: nobody
+reliably reviews their own work, however careful. Two lessons I'm keeping: **process beats
+confidence**, and **design principles aren't posters — they're requirements: testable, enforceable,
+reviewable.** My automated review read my design principles and caught my own backend violating them;
+the fix was choosing honest incompleteness over fabricated completeness.
+
 ## 6. The rebrand — Relay → Brieff
 
 The product shipped its UI as "Relay," a placeholder that was generic and un-ownable. I coined
@@ -137,8 +159,11 @@ differentiation, complementary contrast, the trust principles) rather than taste
 the product: a copilot a skeptical rep will actually adopt because it's fast, cites its sources, stays
 editable, and never gets in the way.
 
-**What's next:** wire the live model on Generate/Regenerate (cached outputs remain the demo fallback),
-then a responsive pass. The thinking, the system, and the brand are done.
+Brieff is **deployed and live**: paste real notes and you get a real, context-aware recap (generated
+by a hosted model, with the cached outputs kept as a graceful fallback so a demo never breaks). The
+thinking, the system, the brand, and a working product are all done — the point was never a mockup, it
+was to ship something a skeptical rep could actually use. **What's next:** a responsive pass and deeper
+empty/error states.
 
 ---
 
