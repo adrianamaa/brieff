@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ContextRail, Icon } from "./recap-view";
+import { ContextRail, Icon, tagMeta, tagDot } from "./recap-view";
 import { Copy, CaretDown } from "@phosphor-icons/react";
 import type { Account, PrepBrief } from "@/lib/data";
 
-const tagMeta: Record<string, { label: string }> = {
-  risk: { label: "Risk" }, competitor: { label: "Competitor" }, signal: { label: "Buying signal" },
-};
-// quiet tag — a small dot + label, not a loud filled pill
-const tagDot: Record<string, string> = { risk: "bg-warn", competitor: "bg-red-500", signal: "bg-positive" };
 const roleLabel: Record<string, string> = { champion: "Champion", economic_buyer: "Economic buyer", blocker: "Blocker", influencer: "Influencer" };
 const roleDot: Record<string, string> = {
   champion: "bg-positive", economic_buyer: "bg-accent", blocker: "bg-warn", influencer: "bg-faint",
@@ -23,6 +18,20 @@ const flip = (set: Set<string>, id: string) => { const n = new Set(set); if (n.h
 
 const CopyIcon = (p: { className?: string }) => <Copy className={p.className} />;
 const Chevron = (p: { className?: string }) => <CaretDown className={p.className} />;
+
+/* one checkable row — used by both the prep-actions and talking-points lists */
+function ChecklistItem({ done, onToggle, text }: { done: boolean; onToggle: () => void; text: string }) {
+  return (
+    <li>
+      <button type="button" onClick={onToggle} aria-pressed={done} className="w-full flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 text-left hover:bg-canvas transition-colors cursor-pointer">
+        <span aria-hidden className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent"}`}>
+          <Icon.check className="h-3 w-3" />
+        </span>
+        <span className={`text-[15px] leading-snug ${done ? "text-faint line-through" : "text-ink"}`}>{text}</span>
+      </button>
+    </li>
+  );
+}
 
 /* section header — small uppercase kicker + 18px title */
 function Kick({ children }: { children: React.ReactNode }) {
@@ -138,37 +147,17 @@ export default function PrepView({ account, prep }: { account: Account; prep: Pr
           {/* layered, collapsible — jump instead of read-all */}
           <Section kicker="Before you join" title="Prep actions" meta={`${doneActions.size}/${prep.prepActions.length} ready`}>
             <ul className="space-y-1">
-              {prep.prepActions.map((p) => {
-                const done = doneActions.has(p.id);
-                return (
-                  <li key={p.id}>
-                    <button type="button" onClick={() => setDoneActions((s) => flip(s, p.id))} aria-pressed={done} className="w-full flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 text-left hover:bg-canvas transition-colors cursor-pointer">
-                      <span aria-hidden className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent"}`}>
-                        <Icon.check className="h-3 w-3" />
-                      </span>
-                      <span className={`text-[15px] leading-snug ${done ? "text-faint line-through" : "text-ink"}`}>{p.text}</span>
-                    </button>
-                  </li>
-                );
-              })}
+              {prep.prepActions.map((p) => (
+                <ChecklistItem key={p.id} done={doneActions.has(p.id)} onToggle={() => setDoneActions((s) => flip(s, p.id))} text={p.text} />
+              ))}
             </ul>
           </Section>
 
           <Section kicker="On the call" title="Talking points" meta={`${covered.size}/${prep.talkingPoints.length} covered`}>
             <ul className="space-y-1">
-              {prep.talkingPoints.map((t) => {
-                const done = covered.has(t.id);
-                return (
-                  <li key={t.id}>
-                    <button type="button" onClick={() => setCovered((s) => flip(s, t.id))} aria-pressed={done} className="w-full flex items-start gap-3 rounded-lg -mx-2 px-2 py-2 text-left hover:bg-canvas transition-colors cursor-pointer">
-                      <span aria-hidden className={`mt-0.5 grid place-items-center h-5 w-5 shrink-0 rounded-md border transition-colors ${done ? "bg-accent border-accent text-white" : "border-line text-transparent"}`}>
-                        <Icon.check className="h-3 w-3" />
-                      </span>
-                      <span className={`text-[15px] leading-snug ${done ? "text-faint line-through" : "text-ink"}`}>{t.text}</span>
-                    </button>
-                  </li>
-                );
-              })}
+              {prep.talkingPoints.map((t) => (
+                <ChecklistItem key={t.id} done={covered.has(t.id)} onToggle={() => setCovered((s) => flip(s, t.id))} text={t.text} />
+              ))}
             </ul>
           </Section>
 

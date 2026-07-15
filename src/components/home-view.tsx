@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Kicker, SectionHead } from "./recap-view";
 import { Check, Sparkle, ArrowRight, Phone, NotePencil } from "@phosphor-icons/react";
-import { todayAgenda, weekStats, northwind, type AgendaItem } from "@/lib/data";
+import { todayAgenda, weekStats, accounts, type AgendaItem } from "@/lib/data";
 
 const nextUp = todayAgenda.find((m) => m.status === "upcoming");
+// resolve the meeting's account so the card never shows another deal's people
+const nextAccount = nextUp?.accountId ? accounts[nextUp.accountId] : undefined;
 const hoursSaved = Math.round((weekStats.minutesSaved / 60) * 10) / 10;
 const pipelineValue = todayAgenda.reduce((sum, m) => sum + m.amount, 0);
 
@@ -76,21 +78,25 @@ export default function HomeView() {
               <h2 className="text-lg font-semibold text-ink mt-1.5">{nextUp.type} · {nextUp.account}</h2>
               <p className="text-[13px] text-muted mt-1">{nextUp.attendees} attendees · ${nextUp.amount.toLocaleString()} · {nextUp.stage} stage</p>
             </div>
-            <Link href="/prep" className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-ink transition-colors">
-              <Sparkle weight="fill" className="h-3.5 w-3.5" /> Prep for this call
-            </Link>
+            {nextUp.href && (
+              <Link href={nextUp.href} className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-ink transition-colors">
+                <Sparkle weight="fill" className="h-3.5 w-3.5" /> Prep for this call
+              </Link>
+            )}
           </div>
-          <div className="mt-4 pt-4 border-t border-line-soft flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-2.5">
-              <div className="flex -space-x-1.5">
-                {northwind.contacts.map((c) => (
-                  <span key={c.id} className="grid place-items-center h-7 w-7 rounded-full bg-canvas border border-line text-[10px] font-semibold text-muted ring-2 ring-surface">{c.name.split(" ").map((n) => n[0]).join("")}</span>
-                ))}
+          {nextAccount && (
+            <div className="mt-4 pt-4 border-t border-line-soft flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <div className="flex -space-x-1.5">
+                  {nextAccount.contacts.map((c) => (
+                    <span key={c.id} className="grid place-items-center h-7 w-7 rounded-full bg-canvas border border-line text-[10px] font-semibold text-muted ring-2 ring-surface">{c.name.split(" ").map((n) => n[0]).join("")}</span>
+                  ))}
+                </div>
+                <span className="text-[13px] text-muted">{nextAccount.contacts.map((c) => c.name.split(" ")[0]).join(", ")}</span>
               </div>
-              <span className="text-[13px] text-muted">{northwind.contacts.map((c) => c.name.split(" ")[0]).join(", ")}</span>
+              {nextUp.focus && <span className="inline-flex items-center gap-1.5 text-[13px] text-muted"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Focus: {nextUp.focus}</span>}
             </div>
-            <span className="inline-flex items-center gap-1.5 text-[13px] text-muted"><span className="h-1.5 w-1.5 rounded-full bg-warn" /> Focus: unblock ROI + security</span>
-          </div>
+          )}
         </div>
         )}
 

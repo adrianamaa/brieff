@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI, Type } from "@google/genai";
-import { northwind, type Account, type RecapResult, type SummaryPoint, type ActionItem, type CrmUpdate } from "@/lib/data";
+import { accounts, SUMMARY_TAGS, type Account, type RecapResult, type SummaryPoint, type ActionItem, type CrmUpdate } from "@/lib/data";
 
 export const runtime = "nodejs";
 
@@ -16,28 +16,29 @@ const groqKey = process.env.GROQ_API_KEY;
 const geminiKey = process.env.GOOGLE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
 
 // The client sends an account *id*, never account data — the server owns the
-// records. Keeps the payload small and the prompt unspoofable.
-const ACCOUNTS: Record<string, Account> = { [northwind.id]: northwind };
+// records (registry lives in data.ts next to the records themselves).
 
-// Per-IP rate limit (in-memory, so per warm serverless instance — a cold start
-// resets it. Good enough to stop casual scripting against the free Groq quota;
-// swap for Upstash if the app ever gets real traffic.)
+// Per-IP fixed-window rate limit (in-memory, so per warm serverless instance —
+// a cold start resets it. Good enough to stop casual scripting against the
+// free Groq quota; swap for Upstash if the app ever gets real traffic.)
 const RATE_LIMIT = 10;
 const RATE_WINDOW_MS = 60_000;
-const hits = new Map<string, number[]>();
+const hits = new Map<string, { count: number; windowStart: number }>();
+let lastSweep = 0;
 function rateLimited(ip: string): boolean {
   const now = Date.now();
-  if (hits.size > 500) {
-    for (const [k, v] of hits) if (v.every((t) => now - t >= RATE_WINDOW_MS)) hits.delete(k);
+  // evict expired windows at most once per window, only when the map is big
+  if (hits.size > 500 && now - lastSweep >= RATE_WINDOW_MS) {
+    lastSweep = now;
+    for (const [k, v] of hits) if (now - v.windowStart >= RATE_WINDOW_MS) hits.delete(k);
   }
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT) {
-    hits.set(ip, recent);
-    return true;
+  const entry = hits.get(ip);
+  if (!entry || now - entry.windowStart >= RATE_WINDOW_MS) {
+    hits.set(ip, { count: 1, windowStart: now });
+    return false;
   }
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
+  entry.count++;
+  return entry.count > RATE_LIMIT;
 }
 
 const SYSTEM = `You are Brieff, an AI copilot for a B2B SaaS Account Executive. From the rep's raw post-call notes, cross-referenced with the account's CRM history, produce a concise, accurate post-call recap.
@@ -48,7 +49,7 @@ Rules (non-negotiable):
 - Action items: each gets an owner (either "You" or the exact full name of one of the account contacts) and a due ("Today", "This week", or a short phrase), plus an "alt" that rephrases the same task differently.
 - CRM updates: propose realistic changes to fields like Stage, Next step, and Health, each with confidence "high" or "medium" and a short sourceLabel. "from" = current CRM value, "to" = proposed value.
 - Follow-up email: a ready-to-send draft addressed to the primary champion, plus an "altBody" that conveys the same content in a tighter style. Sign as "[You]". Nothing is auto-sent; the rep approves.
-- minutesSaved: a realistic integer estimate of admin time saved (typically 8-20).
+- minutesSaved: a realistic integer estimate of admin time saved (typically 8-20). Use 0 if the notes give no basis to estimate — never invent a number.
 - Use stable ids: summary s1,s2,...; actionItems ai1,ai2,...; crmUpdates u1,u2,....
 - Tags are optional and only from: risk, competitor, signal (a buying signal).`;
 
@@ -75,7 +76,7 @@ const responseSchema = {
           text: { type: Type.STRING },
           sourceActivityId: { type: Type.STRING },
           sourceLabel: { type: Type.STRING },
-          tag: { type: Type.STRING, enum: ["risk", "competitor", "signal"], nullable: true },
+          tag: { type: Type.STRING, enum: [...SUMMARY_TAGS], nullable: true },
         },
         required: ["id", "text", "sourceActivityId", "sourceLabel"],
       },
@@ -188,7 +189,7 @@ async function generateWithGemini(notes: string, account: Account): Promise<unkn
 // shape — so every field the UI renders gets checked/coerced here, and the
 // route falls back rather than ship a recap the client could choke on.
 
-const TAGS = new Set(["risk", "competitor", "signal"]);
+const TAGS: ReadonlySet<string> = new Set(SUMMARY_TAGS);
 const isStr = (v: unknown): v is string => typeof v === "string" && v.trim().length > 0;
 
 function sanitizeRecap(raw: unknown): RecapResult | null {
@@ -200,27 +201,30 @@ function sanitizeRecap(raw: unknown): RecapResult | null {
   if (!email || typeof email !== "object" || !isStr(email.subject) || !isStr(email.body)) return null;
 
   const summary: SummaryPoint[] = [];
-  for (const [i, item] of (r.summary as unknown[]).entries()) {
+  for (const item of r.summary as unknown[]) {
     const s = item as Record<string, unknown>;
     if (!s || typeof s !== "object" || !isStr(s.text)) continue;
+    // Transparent principle: an uncited claim is DROPPED, never decorated
+    // with a fabricated citation the user would mistake for a real source.
+    if (!isStr(s.sourceActivityId) || !isStr(s.sourceLabel)) continue;
     summary.push({
       // positional ids, never the model's — duplicate ids would make per-id
       // edit/remove/approve act on multiple rows at once
-      id: `s${i + 1}`,
+      id: `s${summary.length + 1}`,
       text: s.text,
-      sourceActivityId: isStr(s.sourceActivityId) ? s.sourceActivityId : "",
-      sourceLabel: isStr(s.sourceLabel) ? s.sourceLabel : "this call",
+      sourceActivityId: s.sourceActivityId,
+      sourceLabel: s.sourceLabel,
       ...(isStr(s.tag) && TAGS.has(s.tag) ? { tag: s.tag as SummaryPoint["tag"] } : {}),
     });
   }
   if (summary.length === 0) return null;
 
   const actionItems: ActionItem[] = [];
-  for (const [i, item] of (r.actionItems as unknown[]).entries()) {
+  for (const item of r.actionItems as unknown[]) {
     const a = item as Record<string, unknown>;
     if (!a || typeof a !== "object" || !isStr(a.text)) continue;
     actionItems.push({
-      id: `ai${i + 1}`,
+      id: `ai${actionItems.length + 1}`,
       text: a.text,
       alt: isStr(a.alt) ? a.alt : a.text,
       owner: isStr(a.owner) ? a.owner : "You",
@@ -229,21 +233,27 @@ function sanitizeRecap(raw: unknown): RecapResult | null {
   }
 
   const crmUpdates: CrmUpdate[] = [];
-  for (const [i, item] of (r.crmUpdates as unknown[]).entries()) {
+  for (const item of r.crmUpdates as unknown[]) {
     const u = item as Record<string, unknown>;
     if (!u || typeof u !== "object" || !isStr(u.field) || !isStr(u.to)) continue;
+    // same Transparent rule: a proposed CRM change without a source is dropped
+    if (!isStr(u.sourceLabel)) continue;
     crmUpdates.push({
-      id: `u${i + 1}`,
+      id: `u${crmUpdates.length + 1}`,
       field: u.field,
       from: isStr(u.from) ? u.from : "—",
       to: u.to,
       confidence: u.confidence === "high" ? "high" : "medium",
-      sourceLabel: isStr(u.sourceLabel) ? u.sourceLabel : "this call",
+      sourceLabel: u.sourceLabel,
     });
   }
 
-  const rawMinutes = typeof r.minutesSaved === "number" ? Math.round(r.minutesSaved) : 12;
-  const minutesSaved = Math.min(60, Math.max(1, rawMinutes));
+  // 0 = "the model didn't say" → the UI hides the chip. Never fabricate the
+  // product's own north-star metric.
+  const minutesSaved =
+    typeof r.minutesSaved === "number" && r.minutesSaved > 0
+      ? Math.min(60, Math.max(1, Math.round(r.minutesSaved)))
+      : 0;
 
   return {
     summary,
@@ -273,7 +283,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     notes = typeof body?.notes === "string" ? body.notes : "";
-    account = typeof body?.accountId === "string" ? ACCOUNTS[body.accountId] : undefined;
+    account =
+      typeof body?.accountId === "string" && Object.hasOwn(accounts, body.accountId)
+        ? accounts[body.accountId]
+        : undefined;
   } catch {
     return NextResponse.json({ fallback: true, reason: "bad_request" }, { status: 400 });
   }
@@ -291,6 +304,9 @@ export async function POST(req: Request) {
 
     const recap = sanitizeRecap(parsed);
     if (!recap) {
+      // observability: distinguishes "model returned garbage/uncited output"
+      // from transport errors when reading production logs
+      console.warn("[/api/recap] model response failed validation (malformed or uncited) — serving fallback");
       return NextResponse.json({ fallback: true, reason: "bad_shape" });
     }
     return NextResponse.json(recap);

@@ -4,6 +4,12 @@
 
 export type ContactRole = "champion" | "economic_buyer" | "blocker" | "influencer";
 
+// Canonical tag vocabulary — single source of truth for the type union, the
+// API sanitizer's allowlist, and the UI maps. Add a tag HERE and everything
+// stays in sync.
+export const SUMMARY_TAGS = ["risk", "competitor", "signal"] as const;
+export type SummaryTag = (typeof SUMMARY_TAGS)[number];
+
 export interface Contact {
   id: string;
   name: string;
@@ -89,6 +95,10 @@ export const northwind: Account = {
   ],
 };
 
+// Registry of live seeded accounts. The API route resolves accountId against
+// this, so a new account only needs to be added here to work end-to-end.
+export const accounts: Record<string, Account> = { [northwind.id]: northwind };
+
 // --- The "AI" recap output, pre-generated for demo resilience. ---
 // In production this comes from Gemini 2.5 Flash over the activities + call notes.
 // Each claim carries the activity id it was derived from → the source chip.
@@ -98,7 +108,7 @@ export interface SummaryPoint {
   text: string;
   sourceActivityId: string;
   sourceLabel: string;
-  tag?: "risk" | "competitor" | "signal"; // sales-intelligence signal (à la Sales Copilot)
+  tag?: SummaryTag; // sales-intelligence signal (à la Sales Copilot)
 }
 
 export interface ActionItem {
@@ -183,6 +193,7 @@ Best,
 export interface AgendaItem {
   id: string;
   account: string;
+  accountId: string | null; // key into `accounts` (null = not a live seeded deal)
   type: string;
   time: string;
   status: "upcoming" | "completed";
@@ -191,12 +202,13 @@ export interface AgendaItem {
   stage: string;
   needs: "prep" | "recap" | "done";
   href: string | null; // where the action routes (only the seeded Northwind deal is live)
+  focus?: string; // one-line meeting focus, shown on the home "Next up" card
 }
 
 export const todayAgenda: AgendaItem[] = [
-  { id: "m3", account: "Cedar Supply Co.", type: "Pricing review", time: "9:30 AM", status: "completed", attendees: 4, amount: 71000, stage: "Negotiation", needs: "done", href: null },
-  { id: "m2", account: "Atlas Freightways", type: "Discovery call", time: "11:00 AM", status: "completed", attendees: 2, amount: 32000, stage: "Discovery", needs: "recap", href: null },
-  { id: "m1", account: "Northwind Logistics", type: "Demo follow-up", time: "2:00 PM", status: "upcoming", attendees: 3, amount: 48000, stage: "Demo", needs: "prep", href: "/prep" },
+  { id: "m3", account: "Cedar Supply Co.", accountId: null, type: "Pricing review", time: "9:30 AM", status: "completed", attendees: 4, amount: 71000, stage: "Negotiation", needs: "done", href: null },
+  { id: "m2", account: "Atlas Freightways", accountId: null, type: "Discovery call", time: "11:00 AM", status: "completed", attendees: 2, amount: 32000, stage: "Discovery", needs: "recap", href: null },
+  { id: "m1", account: "Northwind Logistics", accountId: "northwind", type: "Demo follow-up", time: "2:00 PM", status: "upcoming", attendees: 3, amount: 48000, stage: "Demo", needs: "prep", href: "/prep", focus: "unblock ROI + security" },
 ];
 
 export const weekStats = { followUpsSent: 7, minutesSaved: 96, meetingsPrepped: 11 };
@@ -209,7 +221,7 @@ export interface PrepBrief {
   meeting: { title: string; when: string; purpose: string };
   primaryInsight: string; // punchy main line — the one thing to register in 5 seconds
   primarySupport: string; // lighter secondary explanation
-  mustKnow: { id: string; lead: string; detail: string; sourceLabel: string; tag?: "risk" | "competitor" | "signal" }[];
+  mustKnow: { id: string; lead: string; detail: string; sourceLabel: string; tag?: SummaryTag }[];
   attendees: { id: string; name: string; title: string; role: ContactRole; rsvp: "accepted" | "tentative" | "no-response"; angle: string }[];
   talkingPoints: { id: string; text: string }[];
   objections: { id: string; objection: string; response: string }[];
